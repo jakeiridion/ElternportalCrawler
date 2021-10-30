@@ -9,7 +9,7 @@ from Crawler import Crawler
 
 class Email:
     def __init__(self):
-        self._smtp_server = "mail.gmx.net"
+        self._smtp_server = os.getenv("SMTP_SERVER")
         self._smtp_server_port = 465
         self._username = os.getenv("EMAIL_ADDRESS")
         self._password = os.getenv("EMAIL_PASSWORD")
