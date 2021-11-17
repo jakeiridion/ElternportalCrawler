@@ -1,4 +1,5 @@
 import logging
+from logging.handlers import RotatingFileHandler
 
 
 def setup_logger(name):
@@ -9,7 +10,7 @@ def setup_logger(name):
     stream_handler.setLevel(logging.INFO)
     stream_handler.setFormatter(formatter)
     log.addHandler(stream_handler)
-    file_handler = logging.FileHandler("log.txt")
+    file_handler = RotatingFileHandler("log.txt", maxBytes=100_000, backupCount=1)
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(formatter)
     log.addHandler(file_handler)
