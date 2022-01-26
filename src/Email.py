@@ -41,7 +41,7 @@ class Email:
             self._log.error(f"SMTP Server address is invalid. Check SMTP_SERVER in .env file. - {e}")
             sys.exit(1)
         except UnicodeEncodeError as e:
-            self._log.error(f"No Special Characters in SMTP Login Credentials."
+            self._log.error(f"No Special Characters in SMTP Login Credentials (äüö)."
                             f"Check EMAIL_ADDRESS/EMAIL_PASSWORD in .env file. - {e}")
             sys.exit(1)
 
