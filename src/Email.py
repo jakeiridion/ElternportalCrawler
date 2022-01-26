@@ -7,6 +7,7 @@ from email.mime.multipart import MIMEMultipart
 import os
 from Crawler import Crawler
 from Logger import setup_logger
+from socket import gaierror
 
 
 class Email:
@@ -27,9 +28,22 @@ class Email:
 
     def send_mail(self, soup):
         context = ssl.create_default_context()
-        with smtplib.SMTP_SSL(self._smtp_server, self._smtp_server_port, context=context) as server:
-            server.login(self._username, self._password)
-            server.sendmail(self._username, self._receivers, self._create_message(soup).as_string())
+        try:
+            with smtplib.SMTP_SSL(self._smtp_server, self._smtp_server_port, context=context) as server:
+                self._log.info("Logging into SMTP Server.")
+                server.login(self._username, self._password)
+                self._log.info("Sending Mail.")
+                server.sendmail(self._username, self._receivers, self._create_message(soup).as_string())
+        except smtplib.SMTPAuthenticationError as e:
+            self._log.error(f"SMTP Credentials are invalid. Check EMAIL_ADDRESS/EMAIL_PASSWORD in .env file. - {e}")
+            sys.exit(1)
+        except gaierror as e:
+            self._log.error(f"SMTP Server address is invalid. Check SMTP_SERVER in .env file. - {e}")
+            sys.exit(1)
+        except UnicodeEncodeError as e:
+            self._log.error(f"No Special Characters in SMTP Login Credentials."
+                            f"Check EMAIL_ADDRESS/EMAIL_PASSWORD in .env file. - {e}")
+            sys.exit(1)
 
     def _create_message(self, soup):
         message = MIMEMultipart("alternative")

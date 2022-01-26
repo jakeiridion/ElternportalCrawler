@@ -1,3 +1,4 @@
+import sys
 import requests
 from bs4 import BeautifulSoup
 import os
@@ -17,7 +18,11 @@ class Crawler:
         self._log = setup_logger(__name__)
 
     def get_html_table(self):
-        soup = self._get_soup()
+        try:
+            soup = self._get_soup()
+        except requests.exceptions.ConnectionError as e:
+            self._log.error(f"Can not connect to Elternportal. Check EP_URL in .env file. - {e}")
+            sys.exit(1)
         self._log.info("Retrieving Table...")
         return soup.find("div", attrs={"class": "main_center"})
 
@@ -30,6 +35,10 @@ class Crawler:
             r = session.get(self._service_url)
             return BeautifulSoup(r.text, "html.parser")
 
+    def _get_csrf_token(self, r):
+        soup = BeautifulSoup(r.content, "html.parser")
+        return soup.find("input", attrs={"name": "csrf"})["value"]
+
     def _login(self, csrf_token, session):
         self._log.info("Logging into Elternportal...")
         payload = {
@@ -38,13 +47,19 @@ class Crawler:
             "csrf": csrf_token,
             "go_to": ""
         }
-        session.post(self._login_url, data=payload)
+        r = session.post(self._login_url, data=payload)
+        self._check_login(r.url)
 
-    def _get_csrf_token(self, r):
-        soup = BeautifulSoup(r.content, "html.parser")
-        return soup.find("input", attrs={"name": "csrf"})["value"]
+    def _check_login(self, url):
+        if self._login_is_successful(url):
+            self._log.info("Login successful.")
+        else:
+            self._log.error("Login Error! - Check EP_USERNAME/EP_PASSWORD in .env file.")
+            sys.exit(1)
+
+    def _login_is_successful(self, url):
+        return url.endswith("/start")
 
     @staticmethod
     def get_current_event_date_str(soup):
         return soup.find("div", attrs={"class": "list full_width"}).text
-

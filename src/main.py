@@ -17,9 +17,8 @@ class App:
         soup = self._crawler.get_html_table()
         table = soup.find_all("table")
         if self._do_send(str(table)):
-            self._log.info("Sending Mail")
             self._email.send_mail(soup)
-            self._log.info("Updating Previous Event Date.")
+            self._log.info("Updating Previous Event file.")
             with open("prev.txt", "w") as file:
                 file.write(str(table))
         self._log.info("No new Events!")
